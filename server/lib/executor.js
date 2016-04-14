@@ -141,9 +141,9 @@ async function run(changeCallback, {charset, url, jqpath}) {
  */
 function runInSchedule(changeCallback, {charset, url, jqpath}) {
 	run(changeCallback, {charset, url, jqpath});
-	// var s = later.parse.recur()
-	//	.every(1).hour().between(0, 12);
-	let s = later.parse.recur().every(30).second();
+	let s = later.parse.recur()
+		.every(1).hour().between(0, 12);
+	// let s = later.parse.recur().every(30).second();
 	later.date.UTC(); // eslint-disable-line new-cap
 	// var occurrences = later.schedule(s).next(10);
 

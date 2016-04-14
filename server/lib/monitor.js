@@ -1,30 +1,29 @@
-'use strict';
-var nodemailer = require('nodemailer');
-var mongoose = require('mongoose');
-var executor = require('./executor');
+import nodemailer from 'nodemailer';
+import mongoose from 'mongoose';
+import executor from './executor';
+import Promise from 'bluebird';
 
-var monitor = (function() {
-	var api = {},
+let monitor = (function() {
+	let api = {},
 		executors = [],
 		transporter;
-	var mongoose = require('bluebird').promisifyAll(require('mongoose'));
-	var monitorSchema = mongoose.Schema({
+	const monitorSchema = mongoose.Schema({
 		nuser: {
 			type: String,
-			index: true
+			index: true,
 		},
 		url: {
 			type: String,
-			index: true
+			index: true,
 		},
 		jqpath: {
 			type: String,
-			index: true
+			index: true,
 		},
 		blockname: String,
 		notifiers: {
 			emails: [String],
-			wechats: [String]
+			wechats: [String],
 		}
 	});
 	monitorSchema.statics.findAndModify = function(query, sort, doc, options, callback) {
@@ -40,9 +39,10 @@ var monitor = (function() {
 				secure: true,
 				auth : {
 					user: 'xhjappadmin@163.com',
-					pass: 'devc0re4'
-				}
+					pass: 'devc0re4',
+				},
 			});
+			Promise.promisifyAll(transporter);
 		}
 	}
 	/*	@notifiers an array of email address
@@ -51,22 +51,18 @@ var monitor = (function() {
 	 *	@value
 	 *  callback: error, info
 	 */
-	api.sendEmail = function(options, callback) {
-		var mailOptions = {
+	api.sendEmail = async function({notifiers, url, blockname, value}) {
+		let mailOptions = {
 			from: 'xhjappadmin@163.com', // sender address
-			to: options.notifiers.join(', '),
-			subject: (options.blockname || options.url) + ' 有更新',
-			text: '新内容:\n' + options.value, // plaintext body
+			to: notifiers.join(', '),
+			subject: blockname || url + ' 有更新',
+			text: '新内容:\n' + value, // plaintext body
 		};
 		createSMTP();
 		//send mail with defined transport object
-		transporter.sendMail(mailOptions, function(error, info) {
-			if (error) {
-				return callback(error);
-			}
-			console.log('Message sent: ' + info.response);
-			callback(null, info);
-		});
+		let info = await transporter.sendMailAsync(mailOptions).catch((err) => {throw err;});
+		console.log('Message sent: ' + info.response);
+		return info;
 	};
 	// Return the monitor
 	function checkMonitor(id) {
@@ -83,21 +79,18 @@ var monitor = (function() {
 	}
 
 	api.stopMonitor = function(monitor) {
-		var id = monitor.url + monitor.jqpath;
-		var exe = checkMonitor(id)
+		let id = monitor.url + monitor.jqpath;
+		let exe = checkMonitor(id)
 		if (exe) {
 			exe.clear();
 		}
 	}
 
-	api.startMonitor = function(monitor) {
-		var id = monitor.url + monitor.jqpath;
-		var exe = checkMonitor(id)
+	api.startMonitor = async function(monitor) {
+		let id = monitor.url + monitor.jqpath;
+		let exe = checkMonitor(id)
 		if (!exe) {
-			var exe = executor.runInSchedule({
-				'url': monitor.url,
-				'jqpath': monitor.jqpath
-			}, function(err, value) {
+			exe = await executor.runInSchedule((value)=> {
 				//TODO get notifiers
 				var notifiers = monitor.notifiers;
 				console.log(monitor.url + ' has update!');
@@ -111,11 +104,11 @@ var monitor = (function() {
 				if(notifiers.wechats){
 					//TODO
 				}
-			}, function(err, value) {
-				//console.log('no change');
-			});
-			global.executors[id] = exe;
-		}
+			},{
+				url: monitor.url,
+				jqpath: monitor.jqpath
+		});
+		global.executors[id] = exe;
 	}
 
 	// function compareNotifiers(a, b) {
@@ -205,4 +198,4 @@ var monitor = (function() {
 
 	return api;
 })();
-module.exports = monitor;
+export default monitor;
