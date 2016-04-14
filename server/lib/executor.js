@@ -123,10 +123,13 @@ async function compare({charset, url, jqpath, value}) {
  *	@callback
  *		result, new value
  */
-async function run({charset, url, jqpath}) {
+async function run(changeCallback, {charset, url, jqpath}) {
 	try{
 		let arr = await getValues({charset, url, jqpath});
-		return await compare({charset, url, jqpath, value: arr.join('\n')});
+		let {changed, value } = await compare({charset, url, jqpath, value: arr.join('\n')});
+		if(changed){
+			changeCallback(value);
+		}
 	} catch(err){
 		throw err;
 	}
@@ -140,11 +143,11 @@ async function run({charset, url, jqpath}) {
  *	@callback
  *		result, new value
  */
-function runInSchedule({charset, url, jqpath}) {
-	run({charset, url, jqpath});
-	var s = later.parse.recur()
-		.every(1).hour().between(0, 12);
-	//var s = later.parse.recur().every(30).second();
+function runInSchedule(changeCallback, {charset, url, jqpath}) {
+	run(changeCallback, {charset, url, jqpath});
+	//var s = later.parse.recur()
+	//	.every(1).hour().between(0, 12);
+	var s = later.parse.recur().every(30).second();
 	later.date.UTC();
 	// var occurrences = later.schedule(s).next(10);
 
@@ -154,7 +157,7 @@ function runInSchedule({charset, url, jqpath}) {
 
 	var timer = later.setInterval(function() {
 		console.log(new Date());
-		run({charset, url, jqpath});
+		run(changeCallback, {charset, url, jqpath});
 	}, s);
 	return timer;
 }
