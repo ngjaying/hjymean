@@ -123,22 +123,13 @@ async function compare({charset, url, jqpath, value}) {
  *	@callback
  *		result, new value
  */
-function run(options, onChangeCallback, stillCallback) {
-	getValues(options, function(err, arr) {
-		if (err)
-			return console.log('error get values');
-		options.value = arr.join('\n');
-		compare(options, function(err, result) {
-			console.log(result);
-			if (result.changed) {
-				onChangeCallback(null, result.value);
-			} else {
-				stillCallback();
-			}
-		});
-	});
-
-
+async function run({charset, url, jqpath}) {
+	try{
+		let arr = await getValues({charset, url, jqpath});
+		return await compare({charset, url, jqpath, value: arr.join('\n')});
+	} catch(err){
+		throw err;
+	}
 }
 
 /*
@@ -149,8 +140,8 @@ function run(options, onChangeCallback, stillCallback) {
  *	@callback
  *		result, new value
  */
-function runInSchedule(options, onChangeCallback, stillCallback) {
-	run(options, onChangeCallback, stillCallback);
+function runInSchedule({charset, url, jqpath}) {
+	run({charset, url, jqpath});
 	var s = later.parse.recur()
 		.every(1).hour().between(0, 12);
 	//var s = later.parse.recur().every(30).second();
@@ -163,7 +154,7 @@ function runInSchedule(options, onChangeCallback, stillCallback) {
 
 	var timer = later.setInterval(function() {
 		console.log(new Date());
-		run(options, onChangeCallback, stillCallback);
+		run({charset, url, jqpath});
 	}, s);
 	return timer;
 }
