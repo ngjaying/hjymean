@@ -1,5 +1,3 @@
-'use strict';
-
 import request from 'request';
 import cheerio from 'cheerio';
 import iconv from 'iconv-lite';
@@ -11,70 +9,70 @@ Promise.promisifyAll(request, {multiArgs: true});
 
 let reqOptions = {
 	headers: {
-		'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/39.0.2171.65 Safari/537.36'
+		'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_1)' +
+		' AppleWebKit/537.36 (KHTML, like Gecko) Chrome/39.0.2171.65 Safari/537.36',
 	},
 	encoding: null,
 	url: null,
 };
 
-let blockSchema = new mongoose.Schema({
+const blockSchema = new mongoose.Schema({
 	url: {
 		type: String,
-		index: true
+		index: true,
 	},
 	jqpath: {
 		type: String,
-		index: true
+		index: true,
 	},
 	value: String,
-	oldMD5: String
+	oldMD5: String,
 });
 let Block = mongoose.model('Block', blockSchema);
 
 /*
- *	@options 
+ *	@options
  *		charset
  *		url
  *		jqpath
  */
 async function getValues({charset, url, jqpath}) {
 	let result = [];
+	let c = charset;
 	reqOptions.url = url;
 	let [res, body] = await request.getAsync(reqOptions).catch((err) => {throw err;});
-	if (res.statusCode == 200) {
-		//Get the encoding of the html
-		if (!charset) {
-
+	if (res.statusCode === 200) {
+		// Get the encoding of the html
+		if (!c) {
 			let arr = String(body).match(/<meta([^>]*?)>/g);
 			if (arr) {
 				for(let val of arr) {
-					let match = val.match(/charset\s*=\s*(.+)\"/);
+					let match = val.match(/charset\s*=\s*(.+)"/);
 					if (match && match[1]) {
-						if (match[1].substr(0, 1) == '"') match[1] = match[1].substr(1);
-						charset = match[1].trim();
-						console.log(charset);
+						if (match[1].substr(0, 1) === '"') match[1] = match[1].substr(1);
+						c = match[1].trim();
+						console.log(c);
 						break;
 					}
 				}
 			}
 		}
 
-		if (charset) {
-			body = iconv.decode(new Buffer(body), charset);
+		if (c) {
+			body = iconv.decode(new Buffer(body), c);
 		}
 
 		let $ = cheerio.load(body);
 		$(jqpath).each((i, elem) => {
-			result.push($(elem).text().replace(/[\r\n]/g, "").trim());
+			result.push($(elem).text().replace(/[\r\n]/g, '').trim());
 		});
 		return result;
-	}else {
-		throw 'Could not get the result';
 	}
+	throw new Error('Could not get the result');
 }
 
 /*
- *	@options 
+ *	@options
  *		charset
  *		url
  *		jqpath
@@ -85,38 +83,36 @@ async function compare({charset, url, jqpath, value}) {
 	console.log(`url ${url}`);
 	let blocks = await Block.find({
 		url,
-		jqpath
+		jqpath,
 	}).exec().catch((err) => {throw err;});
 	console.log(`blocks.length: ${blocks.length}, value: ${JSON.stringify(blocks[0])}`);
 	if (blocks.length > 0) {
 		let currentMD5 = md5(blocks[0].value);
-		if (md5(value) == currentMD5) {
+		if (md5(value) === currentMD5) {
 			return {
 				changed: false,
 				value,
 			};
-		} else {
-			blocks[0].value = value;
-			blocks[0].oldMD5 = currentMD5;
-			await blocks[0].save().catch((err) => {throw err;});
-			console.log("Writtern to db");
-			return {
-				'changed': true,
-				value,
-			};
 		}
-	} else {
-		let newBlock = new Block({charset, url, jqpath, value});
-		await newBlock.save().exec().catch((err) => {throw err;});
-		console.log("Writtern to db");
+		blocks[0].value = value;
+		blocks[0].oldMD5 = currentMD5;
+		await blocks[0].save().catch((err) => {throw err;});
+		console.log('Writtern to db');
 		return {
-			'changed': true,
+			changed: true,
 			value,
 		};
 	}
+	let newBlock = new Block({charset, url, jqpath, value});
+	await newBlock.save().exec().catch((err) => {throw err;});
+	console.log('Writtern to db');
+	return {
+		changed: true,
+		value,
+	};
 }
 /*
- *	@options 
+ *	@options
  *		charset
  *		url
  *		jqpath
@@ -127,16 +123,16 @@ async function run(changeCallback, {charset, url, jqpath}) {
 	try{
 		let arr = await getValues({charset, url, jqpath});
 		let {changed, value } = await compare({charset, url, jqpath, value: arr.join('\n')});
-		if(changed){
+		if(changed) {
 			changeCallback(value);
 		}
-	} catch(err){
+	} catch(err) {
 		throw err;
 	}
 }
 
 /*
- *	@options 
+ *	@options
  *		charset
  *		url
  *		jqpath
@@ -145,17 +141,17 @@ async function run(changeCallback, {charset, url, jqpath}) {
  */
 function runInSchedule(changeCallback, {charset, url, jqpath}) {
 	run(changeCallback, {charset, url, jqpath});
-	//var s = later.parse.recur()
+	// var s = later.parse.recur()
 	//	.every(1).hour().between(0, 12);
-	var s = later.parse.recur().every(30).second();
-	later.date.UTC();
+	let s = later.parse.recur().every(30).second();
+	later.date.UTC(); // eslint-disable-line new-cap
 	// var occurrences = later.schedule(s).next(10);
 
 	// for (var i = 0; i < 10; i++) {
 	// 	console.log(occurrences[i]);
 	// }
 
-	var timer = later.setInterval(function() {
+	let timer = later.setInterval(() => {
 		console.log(new Date());
 		run(changeCallback, {charset, url, jqpath});
 	}, s);
