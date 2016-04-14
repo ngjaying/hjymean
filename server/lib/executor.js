@@ -1,73 +1,77 @@
 'use strict';
-var request = require('request');
-var cheerio = require('cheerio');
-var iconv = require('iconv-lite');
-var md5 = require('md5');
-var later = require('later');
 
-var reqOptions = {
-	'headers': {
+import request from 'request';
+import cheerio from 'cheerio';
+import iconv from 'iconv-lite';
+import md5 from 'md5';
+import later from 'later';
+import Promise from 'bluebird';
+import mongoose from 'mongoose';
+Promise.promisifyAll(mongoose);
+Promise.promisifyAll(request, {multiArgs: true});
+
+let reqOptions = {
+	headers: {
 		'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/39.0.2171.65 Safari/537.36'
 	},
-	'encoding': null
+	encoding: null,
+	url: null,
 };
 
-var mongoose = require('bluebird').promisifyAll(require('mongoose'));
-var blockSchema = mongoose.Schema({
-	url: {type: String, index: true},
-	jqpath: {type: String, index: true},
+let blockSchema = mongoose.Schema({
+	url: {
+		type: String,
+		index: true
+	},
+	jqpath: {
+		type: String,
+		index: true
+	},
 	value: String,
 	oldMD5: String
 });
-var Block = mongoose.model('Block', blockSchema);
+let Block = mongoose.model('Block', blockSchema);
+
 /*
  *	@options 
  *		charset
  *		url
  *		jqpath
- *	@callback
- *		result: string array
  */
-function getValues(options, callback) {
-	var result = [];
-	var charset = options.charset;
-	reqOptions.url = options.url;
-	request.get(reqOptions, function(err, res, body) {
-		if (err) {
-			console.log(err);
-			callback(err, result);
-			return;
-		}
-		if (res.statusCode == 200) {
-			//Get the encoding of the html
-			if (!charset) {
+async function getValues({charset, url, jqpath}) {
+	let result = [];
+	reqOptions.url = url;
+	let [res, body] = await request.getAsync(reqOptions).catch((err) => {throw err;});
+	if (res.statusCode == 200) {
+		//Get the encoding of the html
+		if (!charset) {
 
-				var arr = String(body).match(/<meta([^>]*?)>/g);
-				if (arr) {
-					arr.forEach(function(val) {
-						var match = val.match(/charset\s*=\s*(.+)\"/);
-						if (match && match[1]) {
-							if (match[1].substr(0, 1) == '"') match[1] = match[1].substr(1);
-							charset = match[1].trim();
-							console.log(charset);
-							return false;
-						}
-					})
+			let arr = String(body).match(/<meta([^>]*?)>/g);
+			if (arr) {
+				for(let val of arr) {
+					let match = val.match(/charset\s*=\s*(.+)\"/);
+					if (match && match[1]) {
+						if (match[1].substr(0, 1) == '"') match[1] = match[1].substr(1);
+						charset = match[1].trim();
+						console.log(charset);
+						break;
+					}
 				}
 			}
-
-			if (charset) {
-				body = iconv.decode(new Buffer(body), charset);
-			}
-
-			var $ = cheerio.load(body);
-			$(options.jqpath).each(function() {
-				result.push($(this).text().replace(/[\r\n]/g, "").trim());
-			});
-			callback(null, result);
 		}
 
-	});
+		if (charset) {
+			body = iconv.decode(new Buffer(body), charset);
+		}
+
+		let $ = cheerio.load(body);
+		$(jqpath).each((i, elem) => {
+			result.push($(elem).text().replace(/[\r\n]/g, "").trim());
+		});
+		return result;
+	}else {
+		throw 'Could not get the result';
+	}
 }
 
 /*
@@ -175,9 +179,4 @@ function runInSchedule(options, onChangeCallback, stillCallback) {
 	return timer;
 }
 
-module.exports = {
-	getValues: getValues,
-	compare: compare,
-	run: run,
-	runInSchedule: runInSchedule
-};
+export {getValues, compare, run, runInSchedule};
