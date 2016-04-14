@@ -7,7 +7,6 @@ import md5 from 'md5';
 import later from 'later';
 import Promise from 'bluebird';
 import mongoose from 'mongoose';
-Promise.promisifyAll(mongoose);
 Promise.promisifyAll(request, {multiArgs: true});
 
 let reqOptions = {
@@ -18,7 +17,7 @@ let reqOptions = {
 	url: null,
 };
 
-let blockSchema = mongoose.Schema({
+let blockSchema = new mongoose.Schema({
 	url: {
 		type: String,
 		index: true
@@ -80,51 +79,41 @@ async function getValues({charset, url, jqpath}) {
  *		url
  *		jqpath
  *		value
- *	@callback
- *		result, changed boolean; value: new value
- */
-function compare(options, callback) {
-	Block.find({
-		url: options.url,
-		jqpath: options.jqpath
-	}, function(err, blocks) {
-		console.log('into find ' + blocks);
-		if (err)
-			throw err;
-		if (blocks.length > 0) {
-			var currentMD5 = md5(blocks[0].value);
-			if (md5(options.value) == currentMD5) {
-				callback(null, {
-					'changed': false,
-					'value': options.value
-				});
-			} else {
-				blocks[0].value = options.value;
-				blocks[0].oldMD5 = currentMD5;
-				blocks[0].save(function(err, b) {
-					if (err)
-						return console.error(err);
-					console.log("Writtern to db");
-					callback(null, {
-						'changed': true,
-						'value': options.value
-					});
-				});
 
-			}
+ */
+async function compare({charset, url, jqpath, value}) {
+	console.log(`url ${url}`);
+	let blocks = await Block.find({
+		url,
+		jqpath
+	}).exec().catch((err) => {throw err;});
+	console.log(`blocks.length: ${blocks.length}, value: ${JSON.stringify(blocks[0])}`);
+	if (blocks.length > 0) {
+		let currentMD5 = md5(blocks[0].value);
+		if (md5(value) == currentMD5) {
+			return {
+				changed: false,
+				value,
+			};
 		} else {
-			var newBlock = new Block(options);
-			newBlock.save(function(err, b) {
-				if (err)
-					return console.error(err);
-				console.log("Writtern to db");
-				callback(null, {
-					'changed': true,
-					'value': options.value
-				});
-			});
+			blocks[0].value = value;
+			blocks[0].oldMD5 = currentMD5;
+			await blocks[0].save().catch((err) => {throw err;});
+			console.log("Writtern to db");
+			return {
+				'changed': true,
+				value,
+			};
 		}
-	});
+	} else {
+		let newBlock = new Block({charset, url, jqpath, value});
+		await newBlock.save().exec().catch((err) => {throw err;});
+		console.log("Writtern to db");
+		return {
+			'changed': true,
+			value,
+		};
+	}
 }
 /*
  *	@options 
