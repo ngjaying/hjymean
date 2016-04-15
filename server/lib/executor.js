@@ -104,7 +104,7 @@ async function compare({charset, url, jqpath, value}) {
 		};
 	}
 	let newBlock = new Block({charset, url, jqpath, value});
-	await newBlock.save().exec().catch((err) => {throw err;});
+	await newBlock.save().catch((err) => {throw err;});
 	console.log('Writtern to db');
 	return {
 		changed: true,
@@ -123,6 +123,7 @@ async function run(changeCallback, {charset, url, jqpath}) {
 	try{
 		let arr = await getValues({charset, url, jqpath});
 		let {changed, value } = await compare({charset, url, jqpath, value: arr.join('\n')});
+		console.log(`changed: ${changed}, new value: ${value}`);
 		if(changed) {
 			changeCallback(value);
 		}

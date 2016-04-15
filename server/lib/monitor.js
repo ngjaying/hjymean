@@ -1,6 +1,6 @@
 import nodemailer from 'nodemailer';
 import mongoose from 'mongoose';
-import executor from './executor';
+import * as executor from './executor';
 import Promise from 'bluebird';
 
 let monitor = (function() {
@@ -26,8 +26,17 @@ let monitor = (function() {
 			wechats: [String],
 		}
 	});
-	monitorSchema.statics.findAndModify = function(query, sort, doc, options, callback) {
-		return this.collection.findAndModify(query, sort, doc, options, callback);
+	monitorSchema.statics.findAndModifyAsync = function(query, sort, doc, options){
+		let _this = this;
+		return new Promise(function(resolve, reject){
+			_this.collection.findAndModify(query, sort, doc, options, (err, model) => {
+				if(err)
+					reject(err);
+				else{
+					resolve(model);
+				}
+			});
+		});
 	};
 	var MonitorModel = mongoose.model('Monitor', monitorSchema);
 
@@ -51,7 +60,7 @@ let monitor = (function() {
 	 *	@value
 	 *  callback: error, info
 	 */
-	api.sendEmail = async function({notifiers, url, blockname, value}) {
+	api.sendEmail = async ({notifiers, url, blockname, value}) => {
 		let mailOptions = {
 			from: 'xhjappadmin@163.com', // sender address
 			to: notifiers.join(', '),
@@ -73,12 +82,12 @@ let monitor = (function() {
 	 * monitor: monitorSchema like
 	 *	callback: error
 	 */
-	api.restartMonitor = function(monitor) {
+	api.restartMonitor = (monitor) => {
 		api.stopMonitor(monitor);
 		api.startMonitor(monitor);
 	}
 
-	api.stopMonitor = function(monitor) {
+	api.stopMonitor = (monitor) => {
 		let id = monitor.url + monitor.jqpath;
 		let exe = checkMonitor(id)
 		if (exe) {
@@ -86,28 +95,25 @@ let monitor = (function() {
 		}
 	}
 
-	api.startMonitor = async function(monitor) {
-		let id = monitor.url + monitor.jqpath;
+	api.startMonitor = async ({url, jqpath, notifiers, blockname, value}) => {
+		let id = url + jqpath;
 		let exe = checkMonitor(id)
 		if (!exe) {
-			exe = await executor.runInSchedule((value)=> {
-				//TODO get notifiers
-				var notifiers = monitor.notifiers;
-				console.log(monitor.url + ' has update!');
+			console.log(`create new monitor with ${executor}`);	
+			exe = executor.runInSchedule(async (value)=> {
+				console.log(url + ' has update!');
 				if(notifiers.emails){
-					api.sendEmail({url :monitor.url, notifiers: notifiers.emails, value: value, blockname: monitor.blockname }, function(err, info){
-						if(err)
-							return console.error(err);
-						console.log("Email sent to " + notifiers.emails + "\nurl:" + monitor.url);
+					await api.sendEmail({
+						notifiers: notifiers.emails, 
+						url, value, blockname
 					});
+					console.log("Email sent to " + notifiers.emails + "\nurl:" + url);
 				}
 				if(notifiers.wechats){
 					//TODO
 				}
-			},{
-				url: monitor.url,
-				jqpath: monitor.jqpath
-		});
+			},{url, jqpath});					
+		};
 		global.executors[id] = exe;
 	}
 
@@ -142,8 +148,8 @@ let monitor = (function() {
 	 * opts: monitorSchema like
 	 *	callback: error
 	 */
-	api.addOrUpdateMonitor = function(opts, callback) {
-		MonitorModel.findAndModify({
+	api.addOrUpdateMonitor = async (opts, callback) => {
+		let m = await MonitorModel.findAndModifyAsync({
 			url: opts.url,
 			jqpath: opts.jqpath,
 			nuser: opts.nuser
@@ -155,13 +161,10 @@ let monitor = (function() {
 		}, {
 			new: true,
 			upsert: true
-		}, function(err, model) {
-			if (err)
-				return callback(err);
-			console.log('updated ' + model.value._id);
-			api.restartMonitor(model.value);
-			callback();
-		});
+		}).catch((err) => {throw err;});
+		console.log('updated ' + m.value._id);
+		api.restartMonitor(m.value);
+		
 		// MonitorModel.find({
 		// 	url: opts.url,
 		// 	jqpath: opts.jqpath,
