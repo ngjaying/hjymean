@@ -495,14 +495,10 @@ module.exports = function (grunt) {
 
     // Compiles ES6 to JavaScript using Babel
     babel: {
-      options: {
-        presets: [
-          'es2015',
-          'stage-0'
-        ],         
+      options: {        
         sourceMap: true
       },
-      client: {        
+      client: { 
         files: [{
           expand: true,
           cwd: '<%= yeoman.client %>',
@@ -511,9 +507,6 @@ module.exports = function (grunt) {
         }]
       },
       server: {
-        plugins: [
-          'transform-runtime'
-        ],
         files: [{
           expand: true,
           cwd: '<%= yeoman.server %>',

@@ -6,7 +6,8 @@
 'use strict';
 
 import _ from 'lodash';
-var monitor = require('../../lib/monitor');
+import monitor from '../../lib/monitor';
+
 // Gets a list of Things
 export function launch(req, res) {
   console.log('start to run');
