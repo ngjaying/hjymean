@@ -64,7 +64,8 @@ let monitor = ((function () {
 			from: 'xhjappadmin@163.com', // sender address
 			to: notifiers.join(', '),
 			subject: `${blockname || url}有更新`,
-			text: `新内容:\n${value}`, // plaintext body
+			text: `${url} 新内容:\n${value}`, // plaintext body
+			html: `<a href='${url}'>${blockname}</a> 新内容:\n${value}`,
 		};
 		createSMTP();
 		//send mail with defined transport object
