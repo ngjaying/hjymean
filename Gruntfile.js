@@ -112,41 +112,12 @@ module.exports = function (grunt) {
     },
 
     // Make sure code styles are up to par and there are no obvious mistakes
-    jshint: {
+    eslint: {      
       options: {
-        jshintrc: '<%= yeoman.client %>/.jshintrc',
-        reporter: require('jshint-stylish')
+          config: 'eslint.json',
+          reset: true
       },
-      server: {
-        options: {
-          jshintrc: '<%= yeoman.server %>/.jshintrc'
-        },
-        src: ['<%= yeoman.server %>/**/!(*.spec|*.integration).js']
-      },
-      serverTest: {
-        options: {
-          jshintrc: '<%= yeoman.server %>/.jshintrc-spec'
-        },
-        src: ['<%= yeoman.server %>/**/*.{spec,integration}.js']
-      },
-      all: ['<%= yeoman.client %>/{app,components}/**/!(*.spec|*.mock|app.constant).js'],
-      test: {
-        src: ['<%= yeoman.client %>/{app,components}/**/*.{spec,mock}.js']
-      }
-    },
-
-    jscs: {
-      options: {
-        config: ".jscsrc"
-      },
-      main: {
-        files: {
-          src: [
-            '<%= yeoman.client %>/app/**/*.js',
-            '<%= yeoman.server %>/**/*.js'
-          ]
-        }
-      }
+      target : ['<%= yeoman.server %>/lib/*.js']      
     },
 
     // Empties folders to start fresh
@@ -525,12 +496,13 @@ module.exports = function (grunt) {
     // Compiles ES6 to JavaScript using Babel
     babel: {
       options: {
-        sourceMap: true,
-        optional: [
-          'es7.classProperties'
-        ]
+        presets: [
+          'es2015',
+          'stage-0'
+        ],         
+        sourceMap: true
       },
-      client: {
+      client: {        
         files: [{
           expand: true,
           cwd: '<%= yeoman.client %>',
@@ -539,9 +511,9 @@ module.exports = function (grunt) {
         }]
       },
       server: {
-        options: {
-          optional: ['runtime']
-        },
+        plugins: [
+          'transform-runtime'
+        ],
         files: [{
           expand: true,
           cwd: '<%= yeoman.server %>',
@@ -770,7 +742,7 @@ module.exports = function (grunt) {
   ]);
 
   grunt.registerTask('default', [
-    'newer:jshint',
+    'eslint',
     'test',
     'build'
   ]);

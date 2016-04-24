@@ -9,6 +9,8 @@ import mongoose from 'mongoose';
 mongoose.Promise = require('bluebird');
 import config from './config/environment';
 import http from 'http';
+import config_express from './config/express';
+import routes from './routes';
 
 // Connect to MongoDB
 mongoose.connect(config.mongo.uri, config.mongo.options);
@@ -23,8 +25,8 @@ if (config.seedDB) { require('./config/seed'); }
 // Setup server
 var app = express();
 var server = http.createServer(app);
-require('./config/express')(app);
-require('./routes')(app);
+config_express(app);
+routes(app);
 
 // Start server
 function startServer() {

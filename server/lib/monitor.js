@@ -68,7 +68,7 @@ let monitor = ((function () {
 		};
 		createSMTP();
 		//send mail with defined transport object
-		let info = await transporter.sendMailAsync(mailOptions).catch((err) => {throw err;});
+		let info = await transporter.sendMailAsync(mailOptions).catch((err) => { throw err; });
 		console.log(`Message sent: ${info.response}`);
 		return info;
 	};
@@ -158,8 +158,7 @@ let monitor = ((function () {
 		}, {
 			new: true,
 			upsert: true,
-		}).catch((err) => {throw err;});
-		console.log(`updated ${m.value._id}`);
+		}).catch((err) => { throw err; });
 		api.restartMonitor(m.value);
 
 		// MonitorModel.find({

@@ -40,7 +40,7 @@ async function getValues({charset, url, jqpath}) {
 	let result = [];
 	let c = charset;
 	reqOptions.url = url;
-	let [res, body] = await request.getAsync(reqOptions).catch((err) => {throw err;});
+	let [res, body] = await request.getAsync(reqOptions).catch((err) => { throw err; });
 	if (res.statusCode === 200) {
 		// Get the encoding of the html
 		if (!c) {
@@ -84,7 +84,7 @@ async function compare({charset, url, jqpath, value}) {
 	let blocks = await Block.find({
 		url,
 		jqpath,
-	}).exec().catch((err) => {throw err;});
+	}).exec().catch((err) => { throw err; });
 	console.log(`blocks.length: ${blocks.length}, value: ${JSON.stringify(blocks[0])}`);
 	if (blocks.length > 0) {
 		let currentMD5 = md5(blocks[0].value);
@@ -96,7 +96,7 @@ async function compare({charset, url, jqpath, value}) {
 		}
 		blocks[0].value = value;
 		blocks[0].oldMD5 = currentMD5;
-		await blocks[0].save().catch((err) => {throw err;});
+		await blocks[0].save().catch((err) => { throw err; });
 		console.log('Writtern to db');
 		return {
 			changed: true,
@@ -104,7 +104,7 @@ async function compare({charset, url, jqpath, value}) {
 		};
 	}
 	let newBlock = new Block({charset, url, jqpath, value});
-	await newBlock.save().catch((err) => {throw err;});
+	await newBlock.save().catch((err) => { throw err; });
 	console.log('Writtern to db');
 	return {
 		changed: true,
