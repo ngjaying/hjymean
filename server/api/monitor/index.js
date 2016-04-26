@@ -6,4 +6,4 @@ var controller = require('./monitor.controller');
 
 router.get('/launch', controller.launch);
 
-module.exports = router;
+export default router;

@@ -117,7 +117,7 @@ module.exports = function (grunt) {
           config: 'eslint.json',
           reset: true
       },
-      target : ['<%= yeoman.server %>/lib/*.js']      
+      target : ['<%= yeoman.server %>/{api, lib, components}/*.js']      
     },
 
     // Empties folders to start fresh

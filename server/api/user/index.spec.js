@@ -28,7 +28,7 @@ var routerStub = {
 };
 
 // require the index with our stubbed out modules
-var userIndex = proxyquire('./index', {
+var userIndex = proxyquire('./index', { 
   'express': {
     Router() {
       return routerStub;
@@ -36,7 +36,7 @@ var userIndex = proxyquire('./index', {
   },
   './user.controller': userCtrlStub,
   '../../auth/auth.service': authServiceStub
-});
+}).default;
 
 describe('User API Router:', function() {
 

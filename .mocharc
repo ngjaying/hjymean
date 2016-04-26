@@ -1,0 +1,3 @@
+--reporter spec
+--require mocha.conf.js
+--timeout 5000
