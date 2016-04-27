@@ -1,59 +1,102 @@
 /**
  * Using Rails-like standard naming convention for endpoints.
- * GET     /api/monitors/launch              ->  launch
+ * GET     /api/monitors              ->  index
+ * POST    /api/monitors              ->  create
+ * GET     /api/monitors/:id          ->  show
+ * PUT     /api/monitors/:id          ->  update
+ * DELETE  /api/monitors/:id          ->  destroy
  */
 
 'use strict';
 
 import _ from 'lodash';
-import monitor from '../../lib/monitor';
+import Monitor from './monitor.model';
 
-// Gets a list of Things
-export function launch(req, res) {
-  console.log('start to run');
-  monitor.addOrUpdateMonitor({
-    url: 'http://www.xmws.gov.cn/sydwzk/policy/policy.jsp?TypeID=7',
-    jqpath: 'form[name=formRight] table:nth-of-type(5) td a',
-    nuser: 'hjy',
-    notifiers: {
-      emails: ['johnnyyellow@gmail.com']
-    },
-    blockname: '厦门卫生事业单位'
-  }, function() {
-    console.log('success to start');
-  });
-  monitor.addOrUpdateMonitor({
-    url: 'http://www.xmrs.gov.cn/syggc/syzp/zkdt/',
-    jqpath: '#news a',
-    nuser: 'hjy',
-    notifiers: {
-      emails: ['johnnyyellow@gmail.com']
-    },
-    blockname: '厦门事业单位'
-  }, function() {
-    console.log('success to start');
-  });
-  monitor.addOrUpdateMonitor({
-    url: 'http://www.jimei.gov.cn/xxgk/F394/rsxx/zkzp/',
-    jqpath: 'table.h30.mar_t10 a',
-    user: 'hjy',
-    notifiers: {
-      emails: ['johnnyyellow@gmail.com']
-    },
-    blockname: '集美人事'
-  }, function() {
-    console.log('success to start');
-  });
-  monitor.addOrUpdateMonitor({
-    url: 'http://www.haicang.gov.cn/xx/zdxxgk/jbxxgk/rsxx/zkzp/',
-    jqpath: 'div.hc15_xx_list li a',
-    user: 'hjy',
-    notifiers: {
-      emails: ['johnnyyellow@gmail.com']
-    },
-    blockname: '海沧人事'
-  }, function() {
-    console.log('success to start');
-  });
-  res.status(200).end();
+function respondWithResult(res, statusCode) {
+  statusCode = statusCode || 200;
+  return function(entity) {
+    if (entity) {
+      res.status(statusCode).json(entity);
+    }
+  };
+}
+
+function saveUpdates(updates) {
+  return function(entity) {
+    var updated = _.merge(entity, updates);
+    return updated.saveAsync()
+      .spread(updated => {
+        return updated;
+      });
+  };
+}
+
+function removeEntity(res) {
+  return function(entity) {
+    if (entity) {
+      return entity.removeAsync()
+        .then(() => {
+          res.status(204).end();
+        });
+    }
+  };
+}
+
+function handleEntityNotFound(res) {
+  return function(entity) {
+    if (!entity) {
+      res.status(404).end();
+      return null;
+    }
+    return entity;
+  };
+}
+
+function handleError(res, statusCode) {
+  statusCode = statusCode || 500;
+  return function(err) {
+    res.status(statusCode).send(err);
+  };
+}
+
+// Gets a list of Monitors
+export function index(req, res) {
+  Monitor.findAsync()
+    .then(respondWithResult(res))
+    .catch(handleError(res));
+}
+
+// Gets a single Monitor from the DB
+export function show(req, res) {
+  Monitor.findByIdAsync(req.params.id)
+    .then(handleEntityNotFound(res))
+    .then(respondWithResult(res))
+    .catch(handleError(res));
+}
+
+// Creates a new Monitor in the DB
+export function create(req, res) {
+  Monitor.createAsync(req.body)
+    .then(respondWithResult(res, 201))
+    .catch(handleError(res));
+}
+
+// Updates an existing Monitor in the DB
+export function update(req, res) {
+  if (req.body._id) {
+    delete req.body._id;
+  }
+  Monitor.findByIdAsync(req.params.id)
+    .then(handleEntityNotFound(res))
+    .then(saveUpdates(req.body))
+    .then(respondWithResult(res))
+    .catch(handleError(res));
+}
+
+// Deletes a Monitor from the DB
+export function destroy(req, res) {
+  Monitor.findByIdAsync(req.params.id)
+    .then(handleEntityNotFound(res))
+    .then(removeEntity(res))
+    .catch(handleError(res));
 }

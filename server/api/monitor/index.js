@@ -1,9 +1,15 @@
 'use strict';
 
 var express = require('express');
-var router = express.Router();
 var controller = require('./monitor.controller');
 
-router.get('/launch', controller.launch);
+var router = express.Router();
 
-export default router;
+router.get('/', controller.index);
+router.get('/:id', controller.show);
+router.post('/', controller.create);
+router.put('/:id', controller.update);
+router.patch('/:id', controller.update);
+router.delete('/:id', controller.destroy);
+
+module.exports = router;

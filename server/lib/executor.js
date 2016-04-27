@@ -16,19 +16,19 @@ let reqOptions = {
 	url: null,
 };
 
-const blockSchema = new mongoose.Schema({
-	url: {
-		type: String,
-		index: true,
-	},
-	jqpath: {
-		type: String,
-		index: true,
-	},
-	value: String,
-	oldMD5: String,
-});
-let Block = mongoose.model('Block', blockSchema);
+// const blockSchema = new mongoose.Schema({
+// 	url: {
+// 		type: String,
+// 		index: true,
+// 	},
+// 	jqpath: {
+// 		type: String,
+// 		index: true,
+// 	},
+// 	value: String,
+// 	oldMD5: String,
+// });
+// let Block = mongoose.model('Block', blockSchema);
 
 /*
  *	@options
