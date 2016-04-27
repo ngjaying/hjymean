@@ -5,7 +5,10 @@
 module.exports = {
   // MongoDB connection options
   mongo: {
-    uri: 'mongodb://localhost/hjymean-test'
+    uri: 'mongodb://localhost/hjymean-test',
+    options：{
+      promiseLibrary: global.Promise,
+    }
   },
   sequelize: {
     uri: 'sqlite://',
