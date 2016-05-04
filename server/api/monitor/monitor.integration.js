@@ -3,12 +3,26 @@
 var app = require('../..');
 import request from 'supertest';
 
-var newMonitor;
+let newMonitor;
+let monitorStub = {
+  nuser: 'fakeuser',
+  url: 'http://www.jimei.gov.cn/xxgk/F394/rsxx/zkzp/',
+  jqpath: 'table.h30.mar_t10 a',
+  blockname: 'fakeblock',
+  emails: ['fakeemail@qq.com'],
+};
+function compareToStub(m){
+  expect(m.nuser).to.equal(monitorStub.nuser);
+  expect(m.url).to.equal(monitorStub.url);
+  expect(m.jqpath).to.equal(monitorStub.jqpath);
+  expect(m.blockname).to.equal(monitorStub.blockname);
+  expect(m.emails).to.deep.equal(monitorStub.emails);
+}
 
 describe('Monitor API:', function() {
 
   describe('GET /api/monitors', function() {
-    var monitors;
+    let monitors;
 
     beforeEach(function(done) {
       request(app)
@@ -32,15 +46,14 @@ describe('Monitor API:', function() {
 
   describe('POST /api/monitors', function() {
     beforeEach(function(done) {
+      let { nuser, url, jqpath, blockname, emails } = monitorStub;
       request(app)
         .post('/api/monitors')
-        .send({
-          name: 'New Monitor',
-          info: 'This is the brand new monitor!!!'
-        })
+        .send({ nuser, url, jqpath, blockname, emails })
         .expect(201)
         .expect('Content-Type', /json/)
         .end((err, res) => {
+          console.log(err);
           if (err) {
             return done(err);
           }
@@ -50,14 +63,13 @@ describe('Monitor API:', function() {
     });
 
     it('should respond with the newly created monitor', function() {
-      expect(newMonitor.name).to.equal('New Monitor');
-      expect(newMonitor.info).to.equal('This is the brand new monitor!!!');
+      compareToStub(newMonitor);
     });
 
   });
 
   describe('GET /api/monitors/:id', function() {
-    var monitor;
+    let monitor;
 
     beforeEach(function(done) {
       request(app)
@@ -78,21 +90,19 @@ describe('Monitor API:', function() {
     });
 
     it('should respond with the requested monitor', function() {
-      expect(monitor.name).to.equal('New Monitor');
-      expect(monitor.info).to.equal('This is the brand new monitor!!!');
+      compareToStub(monitor);
     });
 
   });
 
   describe('PUT /api/monitors/:id', function() {
-    var updatedMonitor;
+    let updatedMonitor;
 
     beforeEach(function(done) {
       request(app)
         .put('/api/monitors/' + newMonitor._id)
         .send({
-          name: 'Updated Monitor',
-          info: 'This is the updated monitor!!!'
+          blockname: 'Updated Block Name',
         })
         .expect(200)
         .expect('Content-Type', /json/)
@@ -110,8 +120,7 @@ describe('Monitor API:', function() {
     });
 
     it('should respond with the updated monitor', function() {
-      expect(updatedMonitor.name).to.equal('Updated Monitor');
-      expect(updatedMonitor.info).to.equal('This is the updated monitor!!!');
+      expect(updatedMonitor.blockname).to.equal('Updated Block Name');
     });
 
   });

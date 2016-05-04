@@ -61,14 +61,14 @@ function handleError(res, statusCode) {
 
 // Gets a list of Monitors
 export function index(req, res) {
-  Monitor.findAsync()
+  Monitor.find().exec()
     .then(respondWithResult(res))
     .catch(handleError(res));
 }
 
 // Gets a single Monitor from the DB
 export function show(req, res) {
-  Monitor.findByIdAsync(req.params.id)
+  Monitor.findById(req.params.id).exec()
     .then(handleEntityNotFound(res))
     .then(respondWithResult(res))
     .catch(handleError(res));
@@ -76,7 +76,7 @@ export function show(req, res) {
 
 // Creates a new Monitor in the DB
 export function create(req, res) {
-  Monitor.createAsync(req.body)
+  Monitor.create(req.body)
     .then(respondWithResult(res, 201))
     .catch(handleError(res));
 }
@@ -86,7 +86,7 @@ export function update(req, res) {
   if (req.body._id) {
     delete req.body._id;
   }
-  Monitor.findByIdAsync(req.params.id)
+  Monitor.findById(req.params.id).exec()
     .then(handleEntityNotFound(res))
     .then(saveUpdates(req.body))
     .then(respondWithResult(res))
@@ -95,7 +95,7 @@ export function update(req, res) {
 
 // Deletes a Monitor from the DB
 export function destroy(req, res) {
-  Monitor.findByIdAsync(req.params.id)
+  Monitor.findById(req.params.id).exec()
     .then(handleEntityNotFound(res))
     .then(removeEntity(res))
     .catch(handleError(res));

@@ -6,7 +6,7 @@ module.exports = {
   // MongoDB connection options
   mongo: {
     uri: 'mongodb://localhost/hjymean-test',
-    options：{
+    options: {
       promiseLibrary: global.Promise,
     }
   },
