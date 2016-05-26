@@ -114,32 +114,34 @@ async function run(changeCallback, {charset, url, jqpath}) {
 }
 
 function createSMTP() {
-	if (!transporter) {
-		transporter = nodemailer.createTransport({
-			host: 'smtp.163.com',
-			port: 465,
-			secure: true,
-			auth: {
-				user: 'xhjappadmin@163.com',
-				pass: 'devc0re4',
-      			},
-    		});
-		Promise.promisifyAll(transporter);
-  	}
+  if (!transporter) {
+    transporter = nodemailer.createTransport({
+      host: 'smtp.163.com',
+      port: 465,
+      secure: true,
+      auth: {
+        user: 'xhjappadmin@163.com',
+        pass: 'devc0re4',
+      },
+    });
+    Promise.promisifyAll(transporter);
+  }
 }
 
-async function sendEmail({notifiers, url, blockname, value}) {
+async function sendEmail({emails, url, blockname, value}) {
+  console.log('Send email start');
 	let mailOptions = {
 		from: 'xhjappadmin@163.com', // sender address
-		to: notifiers.join(', '),
+		to: emails.join(', '),
 		subject: `${blockname || url}有更新`,
 		text: `${url} 新内容:\n${value}`, // plaintext body
 		html: `<a href='${url}'>${blockname}</a> 新内容:\n${value}`,
   	};
 	createSMTP();
+  console.log('Send email create smtp');
   //send mail with defined transport object
   let info = await transporter.sendMailAsync(mailOptions).
-    catch((err) => { throw err; });
+    catch((err) => { console.log('error'); throw err; });
 	logger.log(`Message sent: ${info.response}`);
 	return info;
 }
@@ -179,11 +181,12 @@ export function launch(req, res) {
 	logger.debug('monitor id %s', id);
 	if (!exe) {
 		logger.debug('new executor');
-		exe = {};
-		exe.emails = [...new Set(emails)];
+		global.executors[id] = {};
+		global.executors[id].emails = [...new Set(emails)];
 		runInSchedule((value) => {
 			logger.log(`${url} has update!`);
 			let newEmails = global.executors[id].emails;
+      logger.debug(`Email is about to be sent to ${newEmails}`);
 			if(newEmails) {
 				sendEmail({
 					emails: newEmails, url, value, blockname,
@@ -193,10 +196,9 @@ export function launch(req, res) {
       }
     }, {url, jqpath}).then((timer) => {
       logger.debug('timer has been updated ');
-      exe.timer = timer;
-      exe.launched = true;
-      global.executors[id] = exe;
-      respondWithResult(res, exe);
+      global.executors[id].timer = timer;
+      global.executors[id].launched = true;
+      respondWithResult(res, global.executors[id]);
     });
   } else {
   	logger.debug('existing executor');
