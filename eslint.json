@@ -2,10 +2,12 @@
 	"parser": "babel-eslint",
 	"extends": "eslint-config-airbnb",
 	"rules" : {
-		"indent": ["error", "tab"],
+		"indent": 0,
 		"keyword-spacing": 0,
 		"object-curly-spacing": 0,
 		"prefer-const": 0,
-		"spaced-comment": 0
+		"spaced-comment": 0,
+		"no-param-reassign": 1,
+		"no-mixed-spaces-and-tabs": 0
 	}
 }

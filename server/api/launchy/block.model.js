@@ -21,7 +21,7 @@ let BlockSchema = new mongoose.Schema({
 
 BlockSchema.index({url: 1, jqpath: 1}, {unique: true});
 
-function validatePresent(o){
+function validatePresent(o) {
 	return o && o.length;
 }
 
@@ -32,17 +32,17 @@ BlockSchema.path('oldMD5').validate((oldMD5) => {
 /*
 *	Save if the value is changed and save old value as md5
 */
-BlockSchema.post('init', function(){
+BlockSchema.post('init', function () {
 	this._oldValue = this.value;
 });
 
-BlockSchema.pre('save', function(next){
-	if(this.isModified('value')){
-		if(this._oldValue){
-			this.oldMD5 = md5(this._oldValue);	
+BlockSchema.pre('save', function (next) {
+	if(this.isModified('value')) {
+		if(this._oldValue) {
+			this.oldMD5 = md5(this._oldValue);
 		}else{
 			this.oldMD5 = '';
-		}	
+		}
 		this._oldValue = this.value;
 	}
 	next();

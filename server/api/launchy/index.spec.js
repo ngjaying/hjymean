@@ -3,60 +3,60 @@
 var proxyquire = require('proxyquire').noPreserveCache();
 
 var launchyCtrlStub = {
-  showStatus: 'launchyCtrl.showStatus',
-  launch: 'launchyCtrl.launch',
-  stop: 'launchyCtrl.stop',
+  									showStatus: 'launchyCtrl.showStatus',
+  									launch: 'launchyCtrl.launch',
+  									stop: 'launchyCtrl.stop',
 };
 
 var routerStub = {
-  get: sinon.spy(),
-  put: sinon.spy(),
-  patch: sinon.spy(),
-  post: sinon.spy(),
-  delete: sinon.spy()
+  									get: sinon.spy(),
+  									put: sinon.spy(),
+  									patch: sinon.spy(),
+  									post: sinon.spy(),
+  									delete: sinon.spy()
 };
 
 // require the index with our stubbed out modules
 var launchyIndex = proxyquire('./index.js', {
-  'express': {
-    Router: function() {
-      return routerStub;
+  									'express': {
+    									Router: function () {
+      									return routerStub;
     }
   },
-  './launchy.controller': launchyCtrlStub
+  									'./launchy.controller': launchyCtrlStub
 });
 
-describe('Launchy API Router:', function() {
+describe('Launchy API Router:', function () {
 
-  it('should return an express router instance', function() {
-    expect(launchyIndex).to.equal(routerStub);
+  									it('should return an express router instance', function () {
+    									expect(launchyIndex).to.equal(routerStub);
   });
 
-  describe('GET /api.launchies/:id', function() {
+  									describe('GET /api.launchies/:monitor', function () {
 
-    it('should route to launchy.controller.showStatus', function() {
-      expect(routerStub.get
-        .withArgs('/:id', 'launchyCtrl.showStatus')
+    									it('should route to launchy.controller.showStatus', function () {
+      									expect(routerStub.get
+        .withArgs('/:monitor', 'launchyCtrl.showStatus')
         ).to.have.been.calledOnce;
     });
 
   });
 
-  describe('POST /api.launchies/:id', function() {
+  									describe('POST /api.launchies/', function () {
 
-    it('should route to launchy.controller.launch', function() {
-      expect(routerStub.post
-        .withArgs('/:id', 'launchyCtrl.launch')
+    									it('should route to launchy.controller.launch', function () {
+      									expect(routerStub.post
+        .withArgs('/', 'launchyCtrl.launch')
         ).to.have.been.calledOnce;
     });
 
   });
 
-  describe('DELETE /api.launchies/:id', function() {
+  									describe('DELETE /api.launchies/:monitor', function () {
 
-    it('should route to launchy.controller.stop', function() {
-      expect(routerStub.delete
-        .withArgs('/:id', 'launchyCtrl.stop')
+    									it('should route to launchy.controller.stop', function () {
+      									expect(routerStub.delete
+        .withArgs('/:monitor', 'launchyCtrl.stop')
         ).to.have.been.calledOnce;
     });
 

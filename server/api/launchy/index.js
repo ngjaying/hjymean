@@ -5,8 +5,8 @@ var controller = require('./launchy.controller');
 
 var router = express.Router();
 
-router.get('/:id', controller.showStatus);
-router.post('/:id', controller.launch);
-router.delete('/:id', controller.stop);
+router.get('/:monitor', controller.showStatus);
+router.post('/', controller.launch);
+router.delete('/:monitor', controller.stop);
 
 module.exports = router;

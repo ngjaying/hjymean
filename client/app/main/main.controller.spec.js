@@ -2,30 +2,50 @@
 
 describe('Controller: MainController', function() {
 
-  // // load the controller's module
-  // beforeEach(module('hjymeanApp'));
-  // beforeEach(module('stateMock'));
+  // load the controller's module
+  beforeEach(module('hjymeanApp'));
+  beforeEach(module('stateMock'));
 
-  // var scope;
-  // var MainController;
-  // var state;
-  // var $httpBackend;
+  var scope;
+  var MainController;
+  var state;
+  var $httpBackend;
 
-  // // Initialize the controller and a mock scope
-  // beforeEach(inject(function(_$httpBackend_, $controller, $rootScope, $state) {
-  //   $httpBackend = _$httpBackend_;
-  //   $httpBackend.expectGET('/api/things')
-  //     .respond(['HTML5 Boilerplate', 'AngularJS', 'Karma', 'Express']);
+  let monitorStubs = [{
+    nuser: 'fakeuser',
+    url: 'http://www.jimei.gov.cn/xxgk/F394/rsxx/zkzp/',
+    jqpath: 'table.h30.mar_t10 a',
+    blockname: 'fakeblock',
+    emails: ['fakeemail@qq.com'],
+  }, {
+    nuser: 'fakeuser',
+    url: 'http://www.jimei.gov.cn/xxgk/F394/rsxx/zkzp/',
+    jqpath: 'table.h30.mar_t10 a',
+    blockname: 'fakeblock',
+    emails: ['fakeemail@qq.com'],
+  }, {
+    nuser: 'fakeuser',
+    url: 'http://www.jimei.gov.cn/xxgk/F394/rsxx/zkzp/',
+    jqpath: 'table.h30.mar_t10 a',
+    blockname: 'fakeblock',
+    emails: ['fakeemail@qq.com'],
+  }];
 
-  //   scope = $rootScope.$new();
-  //   state = $state;
-  //   MainController = $controller('MainController', {
-  //     $scope: scope
-  //   });
-  // }));
+  // Initialize the controller and a mock scope
+  beforeEach(inject(function(_$httpBackend_, $controller, $rootScope, $state) {
+    $httpBackend = _$httpBackend_;
+    $httpBackend.expectGET('/api/monitors')
+      .respond(['HTML5 Boilerplate', 'AngularJS', 'Karma', 'Express']);
 
-  // it('should attach a list of things to the controller', function() {
-  //   $httpBackend.flush();
-  //   expect(MainController.awesomeThings.length).to.equal(4);
-  // });
+    scope = $rootScope.$new();
+    state = $state;
+    MainController = $controller('MainController', {
+      $scope: scope
+    });
+  }));
+
+  it('should attach a list of things to the controller', function() {
+    $httpBackend.flush();
+    expect(MainController.awesomeThings.length).to.equal(4);
+  });
 });

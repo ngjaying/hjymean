@@ -10,8 +10,7 @@ import path from 'path';
 export default function(app) {
   // Insert routes below
   app.use('/api/monitors', require('./api/monitor'));
-  app.use('/api.launchies/', require('./api/launchy'));
-  app.use('/api/things', require('./api/thing'));
+  app.use('/api/launchies/', require('./api/launchy'));
   app.use('/api/users', require('./api/user').default);
 
   app.use('/auth', require('./auth').default);

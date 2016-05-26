@@ -2,7 +2,7 @@
   "name": "hjymean",
   "version": "0.0.0",
   "main": "server/app.js",
-  "dependencies": {    
+  "dependencies": {
     "babel-runtime": "^6.6.1",
     "bluebird": "^2.9.34",
     "body-parser": "^1.13.3",
@@ -30,7 +30,8 @@
     "passport-google-oauth": "~0.2.0",
     "passport-local": "^1.0.0",
     "request": "^2.70.0",
-    "serve-favicon": "^2.3.0"
+    "serve-favicon": "^2.3.0",
+    "tracer": "^0.8.3"
   },
   "devDependencies": {
     "autoprefixer": "^6.0.0",
